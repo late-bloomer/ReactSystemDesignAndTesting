@@ -1,0 +1,30 @@
+.header {
+  display: flex;
+  direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  background-color: grey;
+  padding: 2rem;
+}
+.task-list {
+  margin: 16px;
+}
+.task-list-header {
+  margin-bottom: 24px;
+}
+.task-item-container {
+  display: flex;
+  align-items: flex-start;
+  margin: 24px;
+}
+.task-item {
+  display: flex;
+  direction: column;
+  gap: 2rem;
+  margin-bottom: 16px;
+}
+.task-sr-num {
+  margin: 0;
+  margin-right: 12px;
+}

@@ -1,0 +1,26 @@
+.app {
+  text-align: center;
+}
+.star {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 4px;
+  font-size: 32px;
+  line-height: 1;
+  color: #ccc;
+  cursor: pointer;
+}
+.star-selected {
+  color: gold;
+}
+.progress-bar-container {
+  border: 1px solid rgb(188, 185, 185);
+  background-color: #ccc;
+  height: 4px;
+  margin: auto;
+}
+.progress-bar-child {
+  background-color: blueviolet;
+  height: 4px;
+}

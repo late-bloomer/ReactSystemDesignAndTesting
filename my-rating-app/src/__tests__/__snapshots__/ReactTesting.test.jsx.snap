@@ -1,0 +1,370 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Snapshot Testing for this file 1`] = `
+{
+  "asFragment": [Function],
+  "baseElement": <body>
+    <div>
+      <div
+        style="border: 1px solid black; padding: 24px; margin: 24px;"
+      >
+        <h1>
+          This is React Testing Example
+        </h1>
+        <input
+          custom-data-test-id="name-input"
+          name="my-name"
+          placeholder="enter your name"
+        />
+        <br />
+        <br />
+        <br />
+        <h3 />
+        <button>
+          click me too
+        </button>
+        <br />
+        <br />
+        <br />
+        <label
+          for="input_1"
+        >
+          Input 1
+        </label>
+        <input
+          id="input_1"
+          type="text"
+          value="test me"
+        />
+        <br />
+        <br />
+        <br />
+        <label
+          for="input_2"
+        >
+          Input 2
+        </label>
+        <input
+          id="input_2"
+          type="text"
+          value="test me too"
+        />
+        <br />
+        <br />
+        <br />
+        <button>
+          Press me
+        </button>
+        <button>
+          Hit me
+        </button>
+        <button>
+          Hit me 2
+        </button>
+        <button>
+          Hit me 3
+        </button>
+        <button>
+          Hit me 4
+        </button>
+        <br />
+        <br />
+        <br />
+        <div
+          role="my-custom-div"
+        >
+          I am here
+        </div>
+        <br />
+        <br />
+        <br />
+        <label
+          for="my-select"
+        >
+          choose me:
+        </label>
+        <select
+          id="my-select"
+        >
+          <option
+            selected=""
+          >
+            1
+          </option>
+          <option>
+            2
+          </option>
+          <option>
+            3
+          </option>
+          <option>
+            4
+          </option>
+        </select>
+        <br />
+        <h3
+          custom-data-test-id="hello_input"
+        >
+          Hello Mohit !!!
+        </h3>
+        <br />
+        <br />
+        <br />
+        <button>
+          Login
+        </button>
+        <br />
+        <br />
+        <br />
+        <h2
+          id="test-my-react"
+        >
+          Test my react
+        </h2>
+        <h2 />
+        <button>
+          Update Async Text
+        </button>
+        <div>
+          Hi, u can test within..
+          <p>
+            i am a child !!!
+          </p>
+        </div>
+        <br />
+        <br />
+        <div>
+          <h1>
+            mohit
+          </h1>
+          <button>
+            print user
+          </button>
+          <br />
+          <br />
+          <button>
+            create user
+          </button>
+          <button>
+            update user
+          </button>
+          <button>
+            delete user
+          </button>
+          <br />
+          <br />
+          <h3>
+            user's list
+          </h3>
+        </div>
+      </div>
+    </div>
+  </body>,
+  "container": <div>
+    <div
+      style="border: 1px solid black; padding: 24px; margin: 24px;"
+    >
+      <h1>
+        This is React Testing Example
+      </h1>
+      <input
+        custom-data-test-id="name-input"
+        name="my-name"
+        placeholder="enter your name"
+      />
+      <br />
+      <br />
+      <br />
+      <h3 />
+      <button>
+        click me too
+      </button>
+      <br />
+      <br />
+      <br />
+      <label
+        for="input_1"
+      >
+        Input 1
+      </label>
+      <input
+        id="input_1"
+        type="text"
+        value="test me"
+      />
+      <br />
+      <br />
+      <br />
+      <label
+        for="input_2"
+      >
+        Input 2
+      </label>
+      <input
+        id="input_2"
+        type="text"
+        value="test me too"
+      />
+      <br />
+      <br />
+      <br />
+      <button>
+        Press me
+      </button>
+      <button>
+        Hit me
+      </button>
+      <button>
+        Hit me 2
+      </button>
+      <button>
+        Hit me 3
+      </button>
+      <button>
+        Hit me 4
+      </button>
+      <br />
+      <br />
+      <br />
+      <div
+        role="my-custom-div"
+      >
+        I am here
+      </div>
+      <br />
+      <br />
+      <br />
+      <label
+        for="my-select"
+      >
+        choose me:
+      </label>
+      <select
+        id="my-select"
+      >
+        <option
+          selected=""
+        >
+          1
+        </option>
+        <option>
+          2
+        </option>
+        <option>
+          3
+        </option>
+        <option>
+          4
+        </option>
+      </select>
+      <br />
+      <h3
+        custom-data-test-id="hello_input"
+      >
+        Hello Mohit !!!
+      </h3>
+      <br />
+      <br />
+      <br />
+      <button>
+        Login
+      </button>
+      <br />
+      <br />
+      <br />
+      <h2
+        id="test-my-react"
+      >
+        Test my react
+      </h2>
+      <h2 />
+      <button>
+        Update Async Text
+      </button>
+      <div>
+        Hi, u can test within..
+        <p>
+          i am a child !!!
+        </p>
+      </div>
+      <br />
+      <br />
+      <div>
+        <h1>
+          mohit
+        </h1>
+        <button>
+          print user
+        </button>
+        <br />
+        <br />
+        <button>
+          create user
+        </button>
+        <button>
+          update user
+        </button>
+        <button>
+          delete user
+        </button>
+        <br />
+        <br />
+        <h3>
+          user's list
+        </h3>
+      </div>
+    </div>
+  </div>,
+  "debug": [Function],
+  "findAllByAltText": [Function],
+  "findAllByDisplayValue": [Function],
+  "findAllByLabelText": [Function],
+  "findAllByPlaceholderText": [Function],
+  "findAllByRole": [Function],
+  "findAllByTestId": [Function],
+  "findAllByText": [Function],
+  "findAllByTitle": [Function],
+  "findByAltText": [Function],
+  "findByDisplayValue": [Function],
+  "findByLabelText": [Function],
+  "findByPlaceholderText": [Function],
+  "findByRole": [Function],
+  "findByTestId": [Function],
+  "findByText": [Function],
+  "findByTitle": [Function],
+  "getAllByAltText": [Function],
+  "getAllByDisplayValue": [Function],
+  "getAllByLabelText": [Function],
+  "getAllByPlaceholderText": [Function],
+  "getAllByRole": [Function],
+  "getAllByTestId": [Function],
+  "getAllByText": [Function],
+  "getAllByTitle": [Function],
+  "getByAltText": [Function],
+  "getByDisplayValue": [Function],
+  "getByLabelText": [Function],
+  "getByPlaceholderText": [Function],
+  "getByRole": [Function],
+  "getByTestId": [Function],
+  "getByText": [Function],
+  "getByTitle": [Function],
+  "queryAllByAltText": [Function],
+  "queryAllByDisplayValue": [Function],
+  "queryAllByLabelText": [Function],
+  "queryAllByPlaceholderText": [Function],
+  "queryAllByRole": [Function],
+  "queryAllByTestId": [Function],
+  "queryAllByText": [Function],
+  "queryAllByTitle": [Function],
+  "queryByAltText": [Function],
+  "queryByDisplayValue": [Function],
+  "queryByLabelText": [Function],
+  "queryByPlaceholderText": [Function],
+  "queryByRole": [Function],
+  "queryByTestId": [Function],
+  "queryByText": [Function],
+  "queryByTitle": [Function],
+  "rerender": [Function],
+  "unmount": [Function],
+}
+`;
