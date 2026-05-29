@@ -3,16 +3,18 @@
  *  ReduxAndContext.test.jsx — Teaching file for Redux Toolkit + React Context
  * ============================================================================
  *
- * This file walks through the three-layered approach to testing connected
- * components and the parallel patterns for React Context.
+ * THIS FILE: pure unit-style tests that don't touch the network at all.
+ *   • Pure reducer / selector tests (no React, no store)
+ *   • Connected component tests with preloadedState (no thunks)
+ *   • Context tests with Provider-wrap (no jest.mock)
  *
- * Project files this test exercises:
- *   • src/store/counterSlice.js       (slice + thunk + selectors)
- *   • src/store/store.js              (production store config)
- *   • src/components/Counter.jsx      (connected component)
- *   • src/contexts/ThemeContext.jsx   (context + provider + hook)
- *   • src/components/ThemedButton.jsx (context consumer)
- *   • src/test-utils/renderWithProviders.jsx
+ * COMPANION FILES (for the parts split out for symmetry):
+ *   • ReduxThunkMSW.test.jsx       — thunk via MSW (network-layer mock)
+ *   • ReduxThunkJestMock.test.jsx  — thunk via jest.mock(global.fetch)
+ *   • ContextJestMock.test.jsx     — context consumer via jest.mock(hook)
+ *
+ * Read all four side-by-side to see how the same underlying behavior is
+ * tested with different mocking strategies.
  *
  * ─── BIG-PICTURE MENTAL MODEL ───────────────────────────────────────────────
  *
@@ -28,16 +30,17 @@
  *   │  Reducers are pure functions     │  Provider often owns useState     │
  *   └──────────────────────────────────┴──────────────────────────────────┘
  *
- *   Both can be tested in three layers, in increasing complexity:
+ *   Both can be tested in three layers:
  *     1. PURE LOGIC      → reducer / selector / pure utility (no React)
  *     2. STATE LIFECYCLE → thunk / provider state transitions
  *     3. INTEGRATION     → component connected to the provider
+ *
+ *   This file covers LAYERS 1 and 3 for Redux, plus all Context patterns
+ *   that use the Provider directly. Layer 2 (thunks) is split out so the
+ *   mocking strategy can be compared cleanly across companion files.
  */
 
-import { configureStore } from "@reduxjs/toolkit";
-import { Provider } from "react-redux";
-import { http, HttpResponse } from "msw";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import counterReducer, {
@@ -45,7 +48,6 @@ import counterReducer, {
   decrement,
   addBy,
   reset,
-  fetchInitialCount,
   selectCount,
   selectStatus,
 } from "../store/counterSlice";
@@ -57,7 +59,6 @@ import {
 import { Counter } from "../components/Counter";
 import { ThemedButton } from "../components/ThemedButton";
 import { renderWithProviders } from "../test-utils/renderWithProviders";
-import { server } from "./mockServices/service";
 
 // ============================================================================
 //  PART 1 — REDUX TOOLKIT
@@ -75,9 +76,7 @@ import { server } from "./mockServices/service";
  */
 describe("LAYER 1 — counter slice reducer (pure)", () => {
   test("returns the initial state when no action matches", () => {
-    // Passing undefined triggers the slice's default initialState.
     const state = counterReducer(undefined, { type: "@@INIT" });
-
     expect(state).toEqual({ value: 0, status: "idle", error: null });
   });
 
@@ -117,105 +116,23 @@ describe("LAYER 1 — counter slice reducer (pure)", () => {
 });
 
 /**
- * ─── LAYER 2: ASYNC THUNK TESTS ──────────────────────────────────────────────
+ * ─── LAYER 3: CONNECTED COMPONENT TESTS (sync only — no thunks here) ─────────
  *
- *   Async thunks need a store to dispatch into (and to read the resulting
- *   state from). MSW intercepts the network call so the thunk behaves like
- *   it would in production — no fake fetch.
- *
- *   PATTERN: real configureStore + MSW network mock + dispatch the thunk +
- *            assert state via store.getState() AND/OR action sequence.
- */
-describe("LAYER 2 — fetchInitialCount thunk", () => {
-  test("happy path: pending → fulfilled, state.value updated", async () => {
-    // Fresh store per test to avoid cross-test pollution.
-    const store = configureStore({ reducer: { counter: counterReducer } });
-
-    expect(store.getState().counter).toEqual({
-      value: 0,
-      status: "idle",
-      error: null,
-    });
-
-    // Dispatch the thunk and await its result.
-    const action = await store.dispatch(fetchInitialCount());
-
-    // MSW handler in counterHandlers.js returns { value: 42 }.
-    expect(action.type).toBe("counter/fetchInitialCount/fulfilled");
-    expect(action.payload).toBe(42);
-
-    // Assert the resulting state.
-    expect(store.getState().counter).toEqual({
-      value: 42,
-      status: "succeeded",
-      error: null,
-    });
-  });
-
-  test("error path: server 500 → rejected, state.status = 'failed'", async () => {
-    // Pattern 3 from MswOverride.test.jsx — override JUST for this test.
-    server.use(
-      http.get(
-        "https://jsonplaceholder.typicode.com/count",
-        () => new HttpResponse(null, { status: 500 }),
-      ),
-    );
-
-    const store = configureStore({ reducer: { counter: counterReducer } });
-    const action = await store.dispatch(fetchInitialCount());
-
-    expect(action.type).toBe("counter/fetchInitialCount/rejected");
-    expect(store.getState().counter.status).toBe("failed");
-    expect(store.getState().counter.error).toMatch(/500/);
-  });
-
-  test("can also assert the dispatched action SEQUENCE via a recorder middleware", async () => {
-    // jest.spyOn(store, "dispatch") DOESN'T work for thunk lifecycle actions
-    // because the thunk middleware intercepts and dispatches internal actions
-    // through its own chain — they never hit the spied outer dispatch.
-    //
-    // The canonical fix: install a tiny middleware that records every action
-    // that flows through the chain. This is also the underlying technique
-    // redux-mock-store uses, but here we keep a real store.
-    const recorded = [];
-    const recorder = () => (next) => (action) => {
-      recorded.push(action);
-      return next(action);
-    };
-
-    const store = configureStore({
-      reducer: { counter: counterReducer },
-      middleware: (getDefault) => getDefault().concat(recorder),
-    });
-
-    await store.dispatch(fetchInitialCount());
-
-    // recorded contains BOTH the thunk-fn and the lifecycle actions.
-    // Action objects have a `.type` string; the thunk function does not.
-    const types = recorded.map((a) => a?.type).filter(Boolean);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        "counter/fetchInitialCount/pending",
-        "counter/fetchInitialCount/fulfilled",
-      ]),
-    );
-  });
-});
-
-/**
- * ─── LAYER 3: CONNECTED COMPONENT TESTS ──────────────────────────────────────
- *
- *   Render a Counter inside a real <Provider store={…}>. Use
- *   renderWithProviders for the cleanest wrap.
+ *   Render a Counter inside a real <Provider store={…}> via the
+ *   renderWithProviders helper.
  *
  *   `preloadedState` is the canonical way to "arrange" the initial state —
  *   cheaper and more declarative than dispatching N actions before the render.
+ *
+ *   Thunk-triggering tests (the "load from API" button) live in
+ *   ReduxThunkMSW.test.jsx so the network-mocking strategy can be compared
+ *   cleanly with ReduxThunkJestMock.test.jsx.
  *
  *   ANTI-PATTERN: redux-mock-store. The Redux team itself recommends real
  *   stores because mocks miss middleware behavior, async thunk lifecycle,
  *   and selector composition.
  */
-describe("LAYER 3 — Counter connected component", () => {
+describe("LAYER 3 — Counter connected component (sync only)", () => {
   test("renders the initial count from store", () => {
     renderWithProviders(<Counter />, {
       preloadedState: { counter: { value: 7, status: "idle", error: null } },
@@ -234,10 +151,7 @@ describe("LAYER 3 — Counter connected component", () => {
     await user.click(screen.getByRole("button", { name: "+" }));
     await user.click(screen.getByRole("button", { name: "+" }));
 
-    // Assert via the DOM…
     expect(screen.getByText(/Count: 2/)).toBeInTheDocument();
-    // …AND via the store. Both are valid; combining them catches a wider
-    // set of bugs (e.g. a stale selector that doesn't subscribe).
     expect(store.getState().counter.value).toBe(2);
   });
 
@@ -252,18 +166,6 @@ describe("LAYER 3 — Counter connected component", () => {
     expect(screen.getByText(/Count: 15/)).toBeInTheDocument();
     expect(store.getState().counter.value).toBe(15);
   });
-
-  test("clicking 'load from API' dispatches the thunk and renders the result", async () => {
-    const user = userEvent.setup();
-    const { store } = renderWithProviders(<Counter />);
-
-    await user.click(screen.getByRole("button", { name: /load from api/i }));
-
-    // findByText waits for the async update — pending → succeeded → value=42.
-    expect(await screen.findByText(/Count: 42/)).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("status: succeeded");
-    expect(store.getState().counter.value).toBe(42);
-  });
 });
 
 // ============================================================================
@@ -277,8 +179,7 @@ describe("LAYER 3 — Counter connected component", () => {
  *   with a controlled value. No state, no provider component, just hardcoded
  *   context data.
  *
- *   Best for testing consumers in isolation when you don't care about
- *   the Provider's internal logic.
+ *   For the jest.mock-the-hook alternative, see ContextJestMock.test.jsx.
  */
 describe("LAYER 1 — ThemedButton with inline ThemeContext.Provider", () => {
   test("reads theme from context and applies the className", () => {
@@ -293,8 +194,6 @@ describe("LAYER 1 — ThemedButton with inline ThemeContext.Provider", () => {
   });
 
   test("RTL's `wrapper` option is the cleanest way to wrap multiple tests", () => {
-    // The `wrapper` option avoids nesting JSX manually — especially useful
-    // when you have several providers stacked.
     const Wrapper = ({ children }) => (
       <ThemeContext.Provider value={{ theme: "light", toggle: () => {} }}>
         {children}
@@ -314,9 +213,6 @@ describe("LAYER 1 — ThemedButton with inline ThemeContext.Provider", () => {
  *   the REAL Provider in the test. This exercises the full provider logic
  *   end-to-end: useState updates, the toggle callback, propagation to
  *   consumers, etc.
- *
- *   The trick: include a small "TestConsumer" if you don't have a natural
- *   consumer that exposes the value through the DOM.
  */
 describe("LAYER 2 — ThemeProvider with internal state", () => {
   test("toggle switches the theme on click", async () => {
@@ -331,7 +227,7 @@ describe("LAYER 2 — ThemeProvider with internal state", () => {
     const button = screen.getByRole("button");
     expect(button).toHaveClass("btn-light");
 
-    await user.click(button); // invokes toggle() from context
+    await user.click(button);
 
     expect(button).toHaveClass("btn-dark");
     expect(button).not.toHaveClass("btn-light");
@@ -348,12 +244,9 @@ describe("LAYER 2 — ThemeProvider with internal state", () => {
   });
 
   test("useTheme throws a helpful error if used outside a Provider", () => {
-    // Silence console.error so React's automatic error logging doesn't
-    // pollute test output for this expected error case.
     const errSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
     function Naked() {
-      // Calling useTheme without a Provider throws — proves the guard works.
       useTheme();
       return null;
     }
@@ -368,9 +261,6 @@ describe("LAYER 2 — ThemeProvider with internal state", () => {
 
 /**
  * ─── LAYER 3: BOTH PROVIDERS COMBINED VIA renderWithProviders ───────────────
- *
- *   In a real app, components often need BOTH Redux + Context. The
- *   renderWithProviders helper hides the wrapping ceremony.
  */
 describe("LAYER 3 — combined providers via renderWithProviders", () => {
   test("Counter still works AND ThemedButton sees the theme override", async () => {
@@ -386,12 +276,10 @@ describe("LAYER 3 — combined providers via renderWithProviders", () => {
       },
     );
 
-    // Redux part
     expect(screen.getByText(/Count: 100/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "+" }));
     expect(store.getState().counter.value).toBe(101);
 
-    // Context part
     expect(screen.getByRole("button", { name: /toggle theme/i })).toHaveClass(
       "btn-dark",
     );
@@ -399,41 +287,19 @@ describe("LAYER 3 — combined providers via renderWithProviders", () => {
 });
 
 /**
- * ─── LAYER 4 (BONUS): MOCKING THE CONTEXT HOOK WITH jest.mock ───────────────
- *
- *   Sometimes the consumer is deeply nested and wiring up the full Provider
- *   in the test is overkill. jest.mock the custom hook directly.
- *
- *   Trade-off: less realistic than the Provider wrapper. Use sparingly —
- *   reach for the wrapper first.
- *
- *   Example (commented out — would require relocating to a separate file
- *   because jest.mock is file-scoped and we use the real hook elsewhere):
- *
- *     jest.mock("../contexts/ThemeContext", () => ({
- *       useTheme: () => ({ theme: "dark", toggle: jest.fn() }),
- *     }));
- *
- *     test("mocked hook short-circuits the Provider tree", () => {
- *       render(<ThemedButton>Hi</ThemedButton>);
- *       expect(screen.getByRole("button")).toHaveClass("btn-dark");
- *     });
- */
-
-/**
  * ─── INTERVIEW-READY CHEAT SHEET ────────────────────────────────────────────
  *
  *   Redux Toolkit:
- *     • Reducer test  → call counterReducer(state, action) directly
- *     • Thunk test    → real configureStore + MSW + dispatch
- *     • Component test → renderWithProviders + preloadedState
+ *     • Reducer test  → call counterReducer(state, action) directly  (THIS FILE)
+ *     • Thunk test    → MSW or jest.mock                              (companion files)
+ *     • Component test → renderWithProviders + preloadedState         (THIS FILE)
  *     • Anti-pattern  → redux-mock-store (use real stores)
  *
  *   React Context:
- *     • Consumer test → wrap in <Context.Provider value={…}>
- *     • Provider test → render the real <MyProvider> with a TestConsumer
- *     • Multi-provider → renderWithProviders with RTL's `wrapper` option
- *     • Deeply nested → jest.mock the hook (last resort)
+ *     • Consumer test → wrap in <Context.Provider value={…}>          (THIS FILE)
+ *     • Provider test → render the real <MyProvider> with a Consumer  (THIS FILE)
+ *     • Multi-provider → renderWithProviders with RTL's `wrapper`     (THIS FILE)
+ *     • Deeply nested → jest.mock the hook                            (companion: ContextJestMock)
  *
  *   Both:
  *     • Always assert on the DOM (what the user sees), often plus the store
