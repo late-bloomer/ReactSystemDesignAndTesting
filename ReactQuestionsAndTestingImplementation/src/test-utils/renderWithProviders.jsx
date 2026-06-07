@@ -23,6 +23,32 @@
  *     recommends real stores in tests — middleware, async lifecycle, and
  *     selector behavior all need a real store to be tested accurately.
  */
+
+/**
+ * A shortcut function that wraps render() in your app's Providers (Redux + Theme) so you don't have to do it manually every test.
+
+    The problem it solves
+    Without it, every test that uses Redux or Context looks like:
+
+
+    test("...", () => {
+      render(
+        <Provider store={configureStore({ reducer: { counter } })}>
+          <ThemeProvider initialTheme="light">
+            <Counter />
+          </ThemeProvider>
+        </Provider>
+      );
+      // ...
+    });
+    That wrapping boilerplate repeats in every single test. Tedious. With our helper:
+
+
+    test("...", () => {
+      renderWithProviders(<Counter />);
+    });
+    Same thing, one line.
+ */
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { render } from "@testing-library/react";

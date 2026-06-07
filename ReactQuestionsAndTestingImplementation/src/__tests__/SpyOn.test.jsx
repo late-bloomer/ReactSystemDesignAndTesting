@@ -110,10 +110,7 @@ describe("#3 — spy on Date.now (freeze the clock)", () => {
   });
 
   test("simulates time progressing across multiple calls", () => {
-    jest
-      .spyOn(Date, "now")
-      .mockReturnValueOnce(1000)
-      .mockReturnValueOnce(2000);
+    jest.spyOn(Date, "now").mockReturnValueOnce(1000).mockReturnValueOnce(2000);
 
     expect(timestampedMessage("first")).toBe("[1000] first");
     expect(timestampedMessage("second")).toBe("[2000] second");
@@ -194,7 +191,9 @@ describe("#6 — spy on a property getter with 'get' as the 3rd arg", () => {
   test("override a custom-defined getter with 'get' as the 3rd arg", () => {
     expect(config.apiUrl).toBe("https://prod.example.com"); // real value
 
-    jest.spyOn(config, "apiUrl", "get").mockReturnValue("https://test.example.com");
+    jest
+      .spyOn(config, "apiUrl", "get")
+      .mockReturnValue("https://test.example.com");
 
     expect(config.apiUrl).toBe("https://test.example.com"); // overridden
   });
@@ -314,6 +313,6 @@ describe("#8 — spy on a method of an object/class instance", () => {
  *
  *   Common pitfalls:
  *     • Forgetting to restore → React warnings get silenced silently
- *     • `import { x }` instead of `import * as ns` → spyOn can't override
+ *     • `import { x }` instead of `import * as namespace` → spyOn can't override
  *     • Spying on the wrong target (instance vs prototype)
  */
